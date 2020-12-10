@@ -2,6 +2,7 @@ const fs = require('fs');
 const request = require('supertest');
 const app = require('../lib/app');
 const Boat = require('../lib/models/Boat');
+const Voyage = require('../lib/models/Voyage');
 const pool = require('../lib/utils/pool');
 
 describe('app endpoint', () => {
@@ -29,17 +30,26 @@ describe('app endpoint', () => {
       powered: 'paddle' });
   });
 
-  it ('finds a boat by id via GET', async() => {
+  it ('finds a boat by id and associated voyages via GET', async() => {
     const boat = await Boat.insert({
       style: 'canoe',
       color: 'red',
       powered: 'paddle'
     });
 
+    const voyages = await Promise.all([
+      { duration: 10, boatId: boat.id },
+      { duration: 55, boatId: boat.id },
+      { duration: 15, boatId: boat.id },
+    ].map(voyage => Voyage.insert(voyage)));
+
     const res = await request(app)
       .get(`/api/v1/boats/${boat.id}`);
 
-    expect(res.body).toEqual(boat);
+    expect(res.body).toEqual({
+      ...boat,
+      voyages: expect.arrayContaining(voyages)
+    });
   });
 
   it('finds all boats via GET', async() => {

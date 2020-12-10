@@ -14,6 +14,8 @@ describe('app endpoint', () => {
     return pool.end();
   });
 
+  // Boat Class CRUD Route Tests --------------------------------------------
+
   it('creates a new boat via POST', async() => {
     const res = await request(app)
       .post('/api/v1/boats')
@@ -114,4 +116,72 @@ describe('app endpoint', () => {
 
     expect(res.body).toEqual(boat);
   });
+
+  // Voyage Class CRUD Route Tests --------------------------------------------
+
+  it('creates a new voyage via POST', async() => {
+    const boat = await Boat.insert({
+      style: 'canoe',
+      color: 'red',
+      powered: 'paddle'
+    });
+    
+    const res = await request(app)
+      .post('/api/v1/voyages')
+      .send({
+        duration: 10,
+        boatId: boat.id
+      });
+
+    expect(res.body).toEqual({ 
+      id: '1',
+      duration: 10,
+      boatId: '1' });
+  });
+
+  it('deletes a voyage via DELETE', async() => {
+
+    const boat = await Boat.insert({
+      style: 'canoe',
+      color: 'red',
+      powered: 'paddle'
+    });
+
+    const voyage = await Voyage.insert({
+      duration: '10',
+      boatId: boat.id
+    });
+
+    const res = await request(app)
+      .delete(`/api/v1/voyages/${voyage.id}`);
+
+    expect(res.body).toEqual(voyage);
+  });
+
+  it('updates a voyage via PUT', async() => {
+    const boat = await Boat.insert({
+      style: 'canoe',
+      color: 'red',
+      powered: 'paddle'
+    });
+
+    const voyage = await Voyage.insert({
+      duration: '10',
+      boatId: boat.id
+    });
+
+    const res = await request(app)
+      .put(`/api/v1/voyages/${voyage.id}`)
+      .send({
+        duration: '20',
+        boatId: boat.id
+      });
+
+    expect(res.body).toEqual({
+      id: voyage.id,
+      duration: '20',
+      boatId: boat.id
+    });
+  });
+
 });
